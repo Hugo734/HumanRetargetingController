@@ -12,7 +12,13 @@ add_library(${CONTROLLER_NAME} SHARED
 target_link_libraries(${CONTROLLER_NAME} PUBLIC 
   mc_rtc::mc_control_fsm
   mc_rtc::mc_rtc_ros
-  baseline_walking_controller::BaselineWalkingController)
+  baseline_walking_controller::BaselineWalkingController
+)
+
+target_include_directories(${CONTROLLER_NAME} PUBLIC 
+  $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
 
 install(TARGETS ${CONTROLLER_NAME} DESTINATION ${MC_RTC_LIBDIR} EXPORT ${TARGETS_EXPORT_NAME})
 

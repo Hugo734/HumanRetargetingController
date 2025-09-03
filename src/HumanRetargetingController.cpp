@@ -1,3 +1,5 @@
+#include <mc_control/mc_controller.h>
+
 #include <mc_tasks/MetaTaskLoader.h>
 #include <mc_tasks/TransformTask.h>
 
@@ -16,6 +18,11 @@ HumanRetargetingController::HumanRetargetingController(mc_rbdyn::RobotModulePtr 
                                                        )
 : BWC::BaselineWalkingController(rm, dt, _config, true)
 {
+
+  for(const auto & f : robot().mb().joints()){
+    std::cout << f.name() << std::endl;
+  }
+
   // Setup tasks
   if(config().has("RetargetingTaskList"))
   {
@@ -58,7 +65,6 @@ void HumanRetargetingController::reset(const mc_control::ControllerResetData & r
 bool HumanRetargetingController::run()
 {
   t_ += dt();
-
   if(enableManagerUpdate_)
   {
     // Update managers

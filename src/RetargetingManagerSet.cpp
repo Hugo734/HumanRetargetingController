@@ -327,6 +327,7 @@ void RetargetingManagerSet::updateEnablement()
 
 void RetargetingManagerSet::updateGripper()
 {
+  std::cout << "[Gripper] Update LeftGripper : " << ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg") << std::endl;
   if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
   {
     const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
@@ -340,7 +341,10 @@ void RetargetingManagerSet::updateGripper()
     {
       ctl().robot().gripper(gripperName).setTargetOpening(1.0 - leftHandJoyMsg.axes[2]);
     }
+    std::cout << "[Gripper] LEFT axis[2] value = " << leftHandJoyMsg.axes[2] << std::endl;
+
   }
+  std::cout << "[Gripper] Update RightGripper : " << ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg") << std::endl;
   if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
   {
     const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
@@ -354,6 +358,7 @@ void RetargetingManagerSet::updateGripper()
     {
       ctl().robot().gripper(gripperName).setTargetOpening(1.0 - rightHandJoyMsg.axes[2]);
     }
+    std::cout << "[Gripper] RIGHT axis[2] value = " << rightHandJoyMsg.axes[2] << std::endl;
   }
 }
 

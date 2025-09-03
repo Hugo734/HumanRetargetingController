@@ -7,6 +7,7 @@ from geometry_msgs.msg import PoseStamped
 from visualization_msgs.msg import InteractiveMarker, InteractiveMarkerControl
 from interactive_markers.interactive_marker_server import InteractiveMarkerServer
 from tf_transformations import quaternion_from_euler
+import time
 
 from PublishManager import PublishManager  # You must adapt this to ROS 2 too.
 
@@ -30,7 +31,7 @@ class PublishPoseInteractiveMarker(Node):
             self.pub_managers[body_part] = PublishManager(self, body_part)
 
         self.im_server.applyChanges()
-
+        
     def add_interactive_marker(self, body_part, init_pos):
         int_marker = InteractiveMarker()
         int_marker.header.frame_id = "robot_map"
@@ -47,7 +48,8 @@ class PublishPoseInteractiveMarker(Node):
         self.add_control(int_marker, "move_y", InteractiveMarkerControl.MOVE_AXIS, 0, 0, np.pi / 2)
         self.add_control(int_marker, "move_z", InteractiveMarkerControl.MOVE_AXIS, 0, np.pi / 2, 0)
 
-        self.im_server.insert(int_marker, self.interactive_marker_feedback)
+        self.im_server.insert(int_marker)
+        self.im_server.setCallback(int_marker.name, self.interactive_marker_feedback)
 
     def add_control(self, marker, name, interaction_mode, roll, pitch, yaw):
         control = InteractiveMarkerControl()
@@ -67,11 +69,11 @@ class PublishPoseInteractiveMarker(Node):
         self.pub_managers[body_part].setMsg(pose_msg)
 
     def run(self):
-        rate = self.create_rate(30)
+        rate = 1.0 / 30
         while rclpy.ok():
             for pub in self.pub_managers.values():
                 pub.publishMsg()
-            rate.sleep()
+            time.sleep(rate)
 
 def main(args=None):
     rclpy.init(args=args)
