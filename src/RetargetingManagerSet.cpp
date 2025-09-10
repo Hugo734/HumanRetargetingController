@@ -14,6 +14,8 @@
 
 #include <sensor_msgs/msg/joy.hpp>
 
+#include <iostream>
+
 using namespace HRC;
 
 void RetargetingManagerSet::Configuration::load(const mc_rtc::Configuration & mcRtcConfig)
@@ -311,6 +313,7 @@ void RetargetingManagerSet::updateEnablement()
 
     if(rightHandJoyMsg.buttons.size() > 0 && rightHandJoyMsg.buttons[0])
     {
+      printf("enableFlag\n");
       enableFlag = true;
     }
   }

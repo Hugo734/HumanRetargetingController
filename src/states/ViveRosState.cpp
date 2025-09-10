@@ -33,8 +33,10 @@ void ViveRosState::start(mc_control::fsm::Controller & _ctl)
       std::string datastoreKey = joyConfig("datastoreKey");
       mc_rtc::log::info("[ViveRosState] Subscribe the {} topic and save it to the {} key in the datastore.", topicName,
                         datastoreKey);
-      // TODO fix this line
-      //joySubList_.push_back(nh_->create_subscription<sensor_msgs::msg::Joy>(topicName, 1, std::bind(&ViveRosState::joyCallback, this, std::placeholders::_1, datastoreKey)));
+      auto callback = [this, datastoreKey](const sensor_msgs::msg::Joy::SharedPtr msg) {
+        this->joyCallback(*msg, datastoreKey);
+      };
+      joySubList_.push_back(nh_->create_subscription<sensor_msgs::msg::Joy>(topicName, 1, callback));
     }
   }
 
@@ -51,12 +53,16 @@ bool ViveRosState::run(mc_control::fsm::Controller &)
 
 void ViveRosState::teardown(mc_control::fsm::Controller &)
 {
-  for(auto & joySub : joySubList_)
+  // Clear all subscriptions
+  joySubList_.clear();
+  
+  // Reset the executor
+  if(exectutor_)
   {
-    // TODO check what is the correct thing to do here
-    //joySub.shutdown();
+    exectutor_.reset();
   }
-
+  
+  // Reset the node handle
   nh_.reset();
 }
 
