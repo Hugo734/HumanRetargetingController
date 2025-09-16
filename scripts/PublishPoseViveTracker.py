@@ -24,16 +24,22 @@ class PublishPoseViveTracker(Node):
             "waist": euler_matrix(-0.5 * np.pi, 0.0, 0.5 * np.pi, "rxyz"),
             "left_elbow": translation_matrix([0.0, 0.0, 0.04]),
             "left_wrist": translation_matrix([0.0, 0.0, 0.05]),
+            # Rotation 
+            # "right_elbow": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.04]),
+            # "right_wrist": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.05]),
             "right_elbow": translation_matrix([0.0, 0.0, 0.04]),
             "right_wrist": translation_matrix([0.0, 0.0, 0.05]),
         }
 
         self.device_sn_to_body_part_map = {
+
+            "LHR-69DC3340": "left_wrist", #Change if nee it LHR-96603665
+            "LHR-96603665": "right_wrist",
+            # ----------------------------
             "LHR-8FDCD86A": "waist",
-            "LHR-66EDBD85": "left_elbow",
-            "LHR-96603665": "left_wrist",
-            "LHR-C0CF8E77": "right_elbow",
-            "LHR-69DC3340": "right_wrist",
+            # ----------------------------
+            "LHR-A26B44E2": "right_elbow", #LHR-C0CF8E77
+            "LHR-C0CF8E77": "left_elbow",
         }
 
         if len(sys.argv) >= 2:

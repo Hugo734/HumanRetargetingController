@@ -45,10 +45,11 @@ class RetargetingManagerSet : public std::unordered_map<ArmSide, std::shared_ptr
 
     //! Point marker size
     double pointMarkerSize = 0.15;
+ 
 
     //! Pose offset of phase marker
-    sva::PTransformd phaseMarkerPoseOffset = sva::PTransformd(Eigen::Vector3d(0.0, 0.0, 1.0));
-
+    sva::PTransformd phaseMarkerPoseOffset = sva::PTransformd(Eigen::Vector3d(0.0, 0.0, 1.0));//Try 0
+    
     /** \brief Load mc_rtc configuration.
         \param mcRtcConfig mc_rtc configuration
     */

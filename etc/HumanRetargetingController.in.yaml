@@ -230,10 +230,12 @@ CentroidalManager:
 RetargetingManagerSet:
   name: RetargetingManagerSet
   humanWaistPoseTopicName: /hrc/poses/waist
-  mirrorRetargeting: false
+  # mirrorRetargeting: false
+  mirrorRetargeting: true
   enableGripper: true
   humanWaistPoseFromOrigin:
-    translation: [1.0, 0.0, 0.8]
+    translation: [1, 0.0, 0.8]
+    # orientation: [0.0, 0.0, 3.14]
   pointMarkerSize: 0.15
   phaseMarkerPoseOffset:
     translation: [0.0, 0.0, 1.0]
@@ -363,7 +365,7 @@ robots:
               L_WRIST_Y: 0.0
             Y:
               L_SHOULDER_P: -1.5708
-              L_SHOULDER_R: 1.5708
+              L_SHOULDER_R: -1.5708
               L_SHOULDER_Y: 0.0
               L_ELBOW_P: 0.0
               L_ELBOW_Y: 0.0
@@ -455,3 +457,25 @@ robots:
         X_p_f:
           translation: [0.0, 0.0, -0.239]
           rotation: [0.0, 1.5555, 0.0]
+
+    # frames:
+    #   - name: LeftElbowFrame
+    #     parent: L_SHOULDER_Y_S
+    #     X_p_f:
+    #       translation: [-0.021, 0.0, -0.309]
+    #       rotation: [0.0, 1.4122, 0.0]
+    #   - name: LeftWristFrame
+    #     parent: L_ELBOW_P_S
+    #     X_p_f:
+    #       translation: [0.0, 0.0, -0.239]
+    #       rotation: [0.0, 1.5555, 0.0]
+    #   - name: RightElbowFrame
+    #     parent: R_SHOULDER_Y_S
+    #     X_p_f:
+    #       translation: [-0.021, 0.0, -0.309]
+    #       rotation: [0.0, 1.4122, 0.0]
+    #   - name: RightWristFrame
+    #     parent: R_ELBOW_P_S
+    #     X_p_f:
+    #       translation: [0.0, 0.0, -0.239]
+    #       rotation: [0.0, 1.5555, 0.0]
