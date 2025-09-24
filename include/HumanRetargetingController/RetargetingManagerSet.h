@@ -7,11 +7,14 @@
 
 #include <HumanRetargetingController/ArmSide.h>
 
+
 namespace HRC
 {
 class HumanRetargetingController;
 class ArmRetargetingManager;
 class RosPoseManager;
+//class MCGlobalController; #Look for this later
+
 
 /** \brief Set of RetargetingManager. */
 class RetargetingManagerSet : public std::unordered_map<ArmSide, std::shared_ptr<ArmRetargetingManager>>

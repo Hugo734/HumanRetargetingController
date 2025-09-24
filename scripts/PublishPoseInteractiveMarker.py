@@ -18,7 +18,6 @@ class PublishPoseInteractiveMarker(Node):
             "waist": [2.0, 0.0, 0.86],
             "left_elbow": [2.2, 0.4, 1.0],
             "left_wrist": [2.6, 0.4, 0.95],
-            #"left_wrist": [10.0, -0.4, -0.95]
             "right_elbow": [2.2, -0.4, 1.0],
             "right_wrist": [2.6, -0.4, 0.95],
         }

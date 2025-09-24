@@ -32,14 +32,13 @@ class PublishPoseViveTracker(Node):
         }
 
         self.device_sn_to_body_part_map = {
-
-            "LHR-69DC3340": "left_wrist", #Change if nee it LHR-96603665
-            "LHR-96603665": "right_wrist",
+            "LHR-69DC3340": "right_wrist", #Change if nee it LHR-96603665
+            "LHR-96603665": "left_wrist",
             # ----------------------------
             "LHR-8FDCD86A": "waist",
             # ----------------------------
-            "LHR-A26B44E2": "right_elbow", #LHR-C0CF8E77
-            "LHR-C0CF8E77": "left_elbow",
+            "LHR-A26B44E2": "left_elbow", #LHR-C0CF8E77
+            "LHR-C0CF8E77": "right_elbow",
         }
 
         if len(sys.argv) >= 2:
