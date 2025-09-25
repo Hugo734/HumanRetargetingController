@@ -461,7 +461,7 @@ robots:
           translation: [0.0, 0.0, -0.239]
           rotation: [0.0, 1.5555, 0.0]
 
-rhps1:
+  rhps1:
     PostureTask:
       target:
         R_SHOULDER_P: [0.3490658503988659] # 20
