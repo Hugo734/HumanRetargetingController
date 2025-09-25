@@ -102,6 +102,9 @@ public:
   /** \brief Remove entries from the logger. */
   void removeFromLogger(mc_rtc::Logger & logger);
 
+  /** \brief Trigger keyboard toggle for retargeting enable/disable. */
+  void triggerKeyboardToggle();
+
 protected:
   /** \brief Const accessor to the controller. */
   inline const HumanRetargetingController & ctl() const
@@ -151,6 +154,9 @@ public:
 
   //! Whether retargeting is enabled or not
   bool isEnabled_ = false;
+
+  //! Whether retargeting is enable or not with keyboard activation (For just trackers integration)
+  bool keyboardToggle_ = false; 
 
   //! Robot for calibration
   std::shared_ptr<mc_rbdyn::Robots> calibRobots_;

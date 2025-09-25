@@ -32,8 +32,14 @@ class PublishPoseViveTracker(Node):
         }
 
         self.device_sn_to_body_part_map = {
-            "LHR-69DC3340": "right_wrist", #Change if nee it LHR-96603665
-            "LHR-96603665": "left_wrist",
+            # ----------------------------
+            # # This was the ID of the controller, but know I will work with tracker instead in the opper of the hands
+            # "LHR-69DC3340": "right_wrist", #Change if nee it LHR-96603665
+            # "LHR-96603665": "left_wrist", 
+            # ----------------------------
+            # Know here will be the new ID for the new trackers
+            "LHR-1303A34B": "right_wrist",
+            "LHR-66EDBD85": "left_wrist",
             # ----------------------------
             "LHR-8FDCD86A": "waist",
             # ----------------------------
@@ -125,6 +131,7 @@ class PublishPoseViveTracker(Node):
             f"Published {body_part}: pos=({pose_msg.pose.position.x:.3f}, {pose_msg.pose.position.y:.3f}, {pose_msg.pose.position.z:.3f})"
         )
 
+        # Handle joy publishing for controllers only (not trackers)
         if device_type == openvr.TrackedDeviceClass_Controller:
             if body_part not in self.joy_pub_managers:
                 self.joy_pub_managers[body_part] = PublishManager(self, body_part, msg_type=Joy, topic_prefix="hrc/joys")
@@ -142,6 +149,9 @@ class PublishPoseViveTracker(Node):
 
             self.joy_pub_managers[body_part].setMsg(joy_msg)
             self.joy_pub_managers[body_part].publishMsg()
+
+        # For trackers (like wrist trackers), we only publish pose data
+        # Joy data will need to come from other controllers if needed
 
 def main(args=None):
     rclpy.init(args=args)

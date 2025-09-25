@@ -144,7 +144,10 @@ void RetargetingManagerSet::addToGUI(mc_rtc::gui::StateBuilder & gui)
 
   gui.addElement({ctl().name(), config_.name, "Status"},
                  mc_rtc::gui::Label("isReady", [this]() { return isReady_ ? "Yes" : "No"; }),
-                 mc_rtc::gui::Label("isEnabled", [this]() { return isEnabled_ ? "Yes" : "No"; }));
+                 // mc_rtc::gui::Label("isEnabled", [this]() { return isEnabled_ ? "Yes" : "No"; }));
+                 // This implementation is for the Enalbe the retargeting without 
+                 mc_rtc::gui::Label("isEnabled", [this](){ return isEnabled_ ? "Yes" : "No"; }),
+                 mc_rtc::gui::Button("Press to enable the Retargeting", [this]() { keyboardToggle_ = !keyboardToggle_;}));
 
   if(!config_.mirrorRetargeting)
   {
@@ -298,6 +301,7 @@ void RetargetingManagerSet::updateEnablement()
   bool enableFlag = false;
   bool disableFlag = false;
 
+  // Check the VR contollers Buttons
   if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
   {
     const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
