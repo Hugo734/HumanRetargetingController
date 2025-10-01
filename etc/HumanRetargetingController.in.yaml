@@ -24,6 +24,7 @@ VerboseStateFactory: false
 constraints:
   - type: contact
   - type: kinematics
+
     damper: [0.1, 0.01, 0.5]
   - type: compoundJoint
 # Collision constraint
@@ -45,8 +46,10 @@ states:
     base: HRC::ViveRos
     configs:
       joyTopics:
+          # Change the topic list, to the topic of Left Manus Glove
         - topicName: /hrc/joys/left_wrist
           datastoreKey: HRC::ViveRos::LeftHandJoyMsg
+          # Change the topic list, to the topic of Right Manus Glove
         - topicName: /hrc/joys/right_wrist
           datastoreKey: HRC::ViveRos::RightHandJoyMsg
 
@@ -231,9 +234,11 @@ RetargetingManagerSet:
   name: RetargetingManagerSet
   humanWaistPoseTopicName: /hrc/poses/waist
   mirrorRetargeting: false
+  #mirrorRetargeting: true
   enableGripper: true
   humanWaistPoseFromOrigin:
-    translation: [1.0, 0.0, 0.8]
+    translation: [1, 0.0, 0.8]
+    # orientation: [0.0, 0.0, 1.57]
   pointMarkerSize: 0.15
   phaseMarkerPoseOffset:
     translation: [0.0, 0.0, 1.0]
@@ -452,6 +457,164 @@ robots:
           rotation: [0.0, 1.4122, 0.0]
       - name: RightWristFrame
         parent: R_ELBOW_P_S
+        X_p_f:
+          translation: [0.0, 0.0, -0.239]
+          rotation: [0.0, 1.5555, 0.0]
+
+  rhps1:
+    PostureTask:
+      target:
+        R_SHOULDER_P: [0.3490658503988659] # 20
+        R_SHOULDER_R: [-0.4363323129985824] # -25
+        R_ELBOW_P: [-1.5707963267948966] # -90
+        L_SHOULDER_P: [0.3490658503988659] # 20
+        L_SHOULDER_R: [0.4363323129985824] # 25
+        L_ELBOW_P: [-1.5707963267948966] # -90
+      jointWeights:
+        WAIST_R: 100
+        WAIST_P: 100
+        WAIST_Y: 100
+
+    CoMTask:
+      activeJoints: [
+      "Root",
+      "L_CROTCH_Y", "L_CROTCH_R", "L_CROTCH_P", "L_KNEE_P", "L_ANKLE_R", "L_ANKLE_P",
+      "R_CROTCH_Y", "R_CROTCH_R", "R_CROTCH_P", "R_KNEE_P", "R_ANKLE_R", "R_ANKLE_P"]
+
+    BaseOrientationTask:
+      frame: CHEST_P_LINK
+
+    RetargetingTaskList:
+      LeftElbow:
+        activeJoints: [
+        "Root",
+        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y"]
+      LeftWrist:
+        activeJoints: [
+        "Root",
+        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y", "L_ELBOW_P"]
+      RightElbow:
+        activeJoints: [
+        "Root",
+        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y"]
+      RightWrist:
+        activeJoints: [
+        "Root",
+        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P"]
+
+    RetargetingManagerSet:
+      robotBaseLinkName: CHEST_P_LINK
+      syncJoints: [
+      "CHEST_Y", # "WAIST_P", "WAIST_R",
+      "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y", "L_ELBOW_P",
+      "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P"]
+      ArmRetargetingManagerList:
+        Left:
+          robotCalibPostures:
+            X:
+              L_SHOULDER_P: -1.5708
+              L_SHOULDER_R: 0.0
+              L_SHOULDER_Y: 0.0
+              L_ELBOW_P: 0.0
+              L_ELBOW_Y: 0.0
+              L_WRIST_R: 0.0
+              L_WRIST_Y: 0.0
+            Y:
+              L_SHOULDER_P: -1.5708
+              L_SHOULDER_R: 1.5708
+              L_SHOULDER_Y: 0.0
+              L_ELBOW_P: 0.0
+              L_ELBOW_Y: 0.0
+              L_WRIST_R: 0.0
+              L_WRIST_Y: 0.0
+            Z:
+              L_SHOULDER_P: -3.14159
+              L_SHOULDER_R: 0.0
+              L_SHOULDER_Y: 0.0
+              L_ELBOW_P: 0.0
+              L_ELBOW_Y: 0.0
+              L_WRIST_R: 0.0
+              L_WRIST_Y: 0.0
+          calibResultConfig:
+            humanTransFromBaseToShoulder:
+              translation: [0.0, 0.3, 0.3]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            robotTransFromBaseToShoulder:
+              translation: [0.03, 0.24, 0.28]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            elbowRotTransFromHumanToRobot:
+              translation: [0.0, 0.0, 0.0]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            wristRotTransFromHumanToRobot:
+              translation: [0.0, 0.0, 0.0]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            elbowScale: 0.8
+            wristScale: 0.8
+        Right:
+          robotCalibPostures:
+            X:
+              R_SHOULDER_P: -1.5708
+              R_SHOULDER_R: 0.0
+              R_SHOULDER_Y: 0.0
+              R_ELBOW_P: 0.0
+              R_ELBOW_Y: 0.0
+              R_WRIST_R: 0.0
+              R_WRIST_Y: 0.0
+            Y:
+              R_SHOULDER_P: -1.5708
+              R_SHOULDER_R: -1.5708
+              R_SHOULDER_Y: 0.0
+              R_ELBOW_P: 0.0
+              R_ELBOW_Y: 0.0
+              R_WRIST_R: 0.0
+              R_WRIST_Y: 0.0
+            Z:
+              R_SHOULDER_P: -3.14159
+              R_SHOULDER_R: 0.0
+              R_SHOULDER_Y: 0.0
+              R_ELBOW_P: 0.0
+              R_ELBOW_Y: 0.0
+              R_WRIST_R: 0.0
+              R_WRIST_Y: 0.0
+          calibResultConfig:
+            humanTransFromBaseToShoulder:
+              translation: [0.0, -0.3, 0.3]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            robotTransFromBaseToShoulder:
+              translation: [0.03, -0.24, 0.28]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            elbowRotTransFromHumanToRobot:
+              translation: [0.0, 0.0, 0.0]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            wristRotTransFromHumanToRobot:
+              translation: [0.0, 0.0, 0.0]
+              rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
+            elbowScale: 0.8
+            wristScale: 0.8
+
+    frames:
+      - name: LeftElbowFrame  
+        parent: L_SHOULDER_Y_LINK
+        X_p_f:
+          translation: [-0.021, 0.0, -0.309]
+          #translation: [0.1, 0.0, 0.9]
+          rotation: [0.0, 1.4122, 0.0]
+      - name: LeftWristFrame
+        parent: L_ELBOW_P_LINK
+        X_p_f:
+          translation: [0.0, 0.0, -0.239]
+          rotation: [0.0, 1.5555, 0.0]
+      - name: RightElbowFrame
+        parent: R_SHOULDER_Y_LINK
+        X_p_f:
+          translation: [-0.021, 0.0, -0.309]
+          rotation: [0.0, 1.4122, 0.0]
+      - name: RightWristFrame
+        parent: R_ELBOW_P_LINK
         X_p_f:
           translation: [0.0, 0.0, -0.239]
           rotation: [0.0, 1.5555, 0.0]
