@@ -601,6 +601,7 @@ robots:
         parent: L_SHOULDER_Y_LINK
         X_p_f:
           translation: [-0.021, 0.0, -0.309]
+
           #translation: [0.1, 0.0, 0.9]
           rotation: [0.0, 1.4122, 0.0]
       - name: LeftWristFrame

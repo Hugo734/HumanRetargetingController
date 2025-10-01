@@ -9,7 +9,10 @@ from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Joy
 from tf_transformations import euler_matrix, translation_matrix, translation_from_matrix, quaternion_from_matrix
 import openvr
-from PublishManager import PublishManager  # Make sure this is ROS 2 compatible!
+import time
+#from PublishManager import PublishManager  # Make sure this is ROS 2 compatible!
+from PublishManager import PublishManager
+
 
 class PublishPoseViveTracker(Node):
     def __init__(self):
@@ -21,14 +24,27 @@ class PublishPoseViveTracker(Node):
             "waist": euler_matrix(-0.5 * np.pi, 0.0, 0.5 * np.pi, "rxyz"),
             "left_elbow": translation_matrix([0.0, 0.0, 0.04]),
             "left_wrist": translation_matrix([0.0, 0.0, 0.05]),
+            # Rotation 
+            # "right_elbow": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.04]),
+            # "right_wrist": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.05]),
             "right_elbow": translation_matrix([0.0, 0.0, 0.04]),
             "right_wrist": translation_matrix([0.0, 0.0, 0.05]),
         }
 
         self.device_sn_to_body_part_map = {
-            "LHR-8C30BD01": "waist",
-            "LHR-1FB29FC6": "left_elbow",
-            "LHR-301CBF17": "left_wrist",
+            # ----------------------------
+            # # This was the ID of the controller, but know I will work with tracker instead in the opper of the hands
+            # "LHR-69DC3340": "right_wrist", #Change if nee it LHR-96603665
+            # "LHR-96603665": "left_wrist", 
+            # ----------------------------
+            # Know here will be the new ID for the new trackers
+            "LHR-1303A34B": "right_wrist",
+            "LHR-66EDBD85": "left_wrist",
+            # ----------------------------
+            "LHR-8FDCD86A": "waist",
+            # ----------------------------
+            "LHR-A26B44E2": "left_elbow", #LHR-C0CF8E77
+            "LHR-C0CF8E77": "right_elbow",
         }
 
         if len(sys.argv) >= 2:
@@ -48,7 +64,7 @@ class PublishPoseViveTracker(Node):
         openvr.shutdown()
 
     def run(self):
-        rate = self.create_rate(30)
+        rate = 1.0 / 30 # 30 Hz
         print_info = True
 
         while rclpy.ok():
@@ -61,13 +77,14 @@ class PublishPoseViveTracker(Node):
                 self.get_logger().info("Device info:")
             for device_idx in range(openvr.k_unMaxTrackedDeviceCount):
                 self.process_single_device_data(device_idx, print_info)
-
+                
             if print_info:
                 print_info = False
 
-            rate.sleep()
+            time.sleep(rate)
 
     def process_single_device_data(self, device_idx, print_info=False):
+        
         if not self.device_data_list[device_idx].bDeviceIsConnected:
             return
 
@@ -110,6 +127,11 @@ class PublishPoseViveTracker(Node):
         self.pose_pub_managers[body_part].setMsg(pose_msg)
         self.pose_pub_managers[body_part].publishMsg()
 
+        self.get_logger().info(
+            f"Published {body_part}: pos=({pose_msg.pose.position.x:.3f}, {pose_msg.pose.position.y:.3f}, {pose_msg.pose.position.z:.3f})"
+        )
+
+        # Handle joy publishing for controllers only (not trackers)
         if device_type == openvr.TrackedDeviceClass_Controller:
             if body_part not in self.joy_pub_managers:
                 self.joy_pub_managers[body_part] = PublishManager(self, body_part, msg_type=Joy, topic_prefix="hrc/joys")
@@ -127,6 +149,9 @@ class PublishPoseViveTracker(Node):
 
             self.joy_pub_managers[body_part].setMsg(joy_msg)
             self.joy_pub_managers[body_part].publishMsg()
+
+        # For trackers (like wrist trackers), we only publish pose data
+        # Joy data will need to come from other controllers if needed
 
 def main(args=None):
     rclpy.init(args=args)
