@@ -42,16 +42,19 @@ states:
   HRC::GuiWalk_:
     base: BWC::GuiWalk
 
+
   HRC::ViveRos_:
     base: HRC::ViveRos
     configs:
       joyTopics:
           # Change the topic list, to the topic of Left Manus Glove
         - topicName: /hrc/joys/left_wrist
+          datastoreKey: HRD::ViveRos::manus_glove_0
           datastoreKey: HRC::ViveRos::LeftHandJoyMsg
           # Change the topic list, to the topic of Right Manus Glove
         - topicName: /hrc/joys/right_wrist
           datastoreKey: HRC::ViveRos::RightHandJoyMsg
+          datastoreKey: HRD::ViveRos::manus_glove_1
 
   HRC::Main_:
     base: Parallel
