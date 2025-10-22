@@ -79,6 +79,16 @@ void RetargetingManagerSet::reset()
   {
     armManagerKV.second->reset();
   }
+
+  if(ctlPtr_->robot().hasDevice<mc_rbdyn::ManusDevice>("left_hand"))
+  {
+    manus_glove_left_ = &ctlPtr_->robot().device<mc_rbdyn::ManusDevice>("left_hand");
+  }
+
+  if(ctlPtr_->robot().hasDevice<mc_rbdyn::ManusDevice>("right_hand"))
+  {
+    manus_glove_right_ = &ctlPtr_->robot().device<mc_rbdyn::ManusDevice>("right_hand");
+  }
 }
 
 void RetargetingManagerSet::update()
@@ -144,10 +154,9 @@ void RetargetingManagerSet::addToGUI(mc_rtc::gui::StateBuilder & gui)
 
   gui.addElement({ctl().name(), config_.name, "Status"},
                  mc_rtc::gui::Label("isReady", [this]() { return isReady_ ? "Yes" : "No"; }),
-                 // mc_rtc::gui::Label("isEnabled", [this]() { return isEnabled_ ? "Yes" : "No"; }));
                  // This implementation is for the Enalbe the retargeting without 
-                 mc_rtc::gui::Label("isEnabled", [this](){ return isEnabled_ ? "Yes" : "No"; }),
-                 mc_rtc::gui::Button("Press to enable the Retargeting", [this]() { keyboardToggle_ = !keyboardToggle_;}));
+                 mc_rtc::gui::Label("isEnabled", [this](){ return isEnabled_ ? "Yes" : "No"; }));
+                 //mc_rtc::gui::Button("clearRobot", [this]() { keyboardToggle_ = !keyboardToggle_;}));
 
   if(!config_.mirrorRetargeting)
   {
@@ -296,6 +305,7 @@ void RetargetingManagerSet::updateReadiness()
   }
 }
 
+/*
 void RetargetingManagerSet::updateEnablement()
 {
   bool enableFlag = false;
@@ -331,43 +341,40 @@ void RetargetingManagerSet::updateEnablement()
     enable();
   }
 }
-
+*/
 void RetargetingManagerSet::updateGripper()
 {
-  if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
+  std::string gripperName = "l_gripper";
+  if(config_.mirrorRetargeting)
   {
-    const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
-
-    std::string gripperName = "l_gripper";
-    if(config_.mirrorRetargeting)
-    {
-      gripperName = "r_gripper";
-    }
-    if(leftHandJoyMsg.axes.size() > 2)
-    {
-      ctl().robot().gripper(gripperName).setTargetOpening(1.0 - leftHandJoyMsg.axes[2]);
-    }
+    gripperName = "r_gripper";
   }
-  if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
-  {
-    const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
+  // TODO: map the ManusDevice data to gripper opening
+  // example : manus_glove_left_->data();
 
-    std::string gripperName = "r_gripper";
-    if(config_.mirrorRetargeting)
-    {
-      gripperName = "l_gripper";
-    }
-    if(rightHandJoyMsg.axes.size() > 2)
-    {
-      ctl().robot().gripper(gripperName).setTargetOpening(1.0 - rightHandJoyMsg.axes[2]);
-    }
-  }
+  // if(manus_glove_left_->data.axes.size() > 2)
+  // {
+  //   ctl().robot().gripper(gripperName).setTargetOpening(1.0 - leftHandJoyMsg.axes[2]);
+  // }
+
+  
+  // std::string gripperName = "r_gripper";
+  // if(config_.mirrorRetargeting)
+  // {
+  //   gripperName = "l_gripper";
+  // }
+  // if(rightHandJoyMsg.axes.size() > 2)
+  // {
+  //   ctl().robot().gripper(gripperName).setTargetOpening(1.0 - rightHandJoyMsg.axes[2]);
+  // }
+  
 }
 
 void RetargetingManagerSet::updateGUI()
 {
   // Add buttons
   ctl().gui()->removeElement({ctl().name(), config_.name}, "EnableRetargeting");
+  // Change this for some test
   ctl().gui()->removeElement({ctl().name(), config_.name}, "DisableRetargeting");
   if(isReady_ && !isEnabled_)
   {

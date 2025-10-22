@@ -3,9 +3,12 @@
 #include <mc_rtc/gui/StateBuilder.h>
 #include <mc_rtc/log/Logger.h>
 
+#include <memory>
 #include <rclcpp/rclcpp.hpp>
 
 #include <HumanRetargetingController/ArmSide.h>
+
+#include <mc_manus/ManusDevice.h>
 
 
 namespace HRC
@@ -47,8 +50,8 @@ class RetargetingManagerSet : public std::unordered_map<ArmSide, std::shared_ptr
     sva::PTransformd humanWaistPoseFromOrigin = sva::PTransformd::Identity();
 
     //! Point marker size
-    double pointMarkerSize = 0.15;
- 
+    //double pointMarkerSize = 0.15;
+    double pointMarkerSize = 0.05;//Try 0.05
 
     //! Pose offset of phase marker
     sva::PTransformd phaseMarkerPoseOffset = sva::PTransformd(Eigen::Vector3d(0.0, 0.0, 1.0));//Try 0
@@ -103,7 +106,7 @@ public:
   void removeFromLogger(mc_rtc::Logger & logger);
 
   /** \brief Trigger keyboard toggle for retargeting enable/disable. */
-  void triggerKeyboardToggle();
+  //void triggerKeyboardToggle(); #quick test
 
 protected:
   /** \brief Const accessor to the controller. */
@@ -156,7 +159,7 @@ public:
   bool isEnabled_ = false;
 
   //! Whether retargeting is enable or not with keyboard activation (For just trackers integration)
-  bool keyboardToggle_ = false; 
+  //bool keyboardToggle_ = false; #quick test
 
   //! Robot for calibration
   std::shared_ptr<mc_rbdyn::Robots> calibRobots_;
@@ -173,6 +176,10 @@ protected:
 
   //! ROS pose manager for human waist pose
   std::shared_ptr<RosPoseManager> humanWaistPoseManager_;
+
+  mc_rbdyn::ManusDevice *manus_glove_left_;
+  mc_rbdyn::ManusDevice *manus_glove_right_;
+
 
   //! ROS execuctor
   rclcpp::Executor::SharedPtr executor_;

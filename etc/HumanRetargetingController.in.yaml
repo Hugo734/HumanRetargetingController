@@ -46,15 +46,16 @@ states:
   HRC::ViveRos_:
     base: HRC::ViveRos
     configs:
+    
       joyTopics:
           # Change the topic list, to the topic of Left Manus Glove
         - topicName: /hrc/joys/left_wrist
-          datastoreKey: HRD::ViveRos::manus_glove_0
+          #datastoreKey: HRD::ViveRos::manus_glove_0
           datastoreKey: HRC::ViveRos::LeftHandJoyMsg
           # Change the topic list, to the topic of Right Manus Glove
         - topicName: /hrc/joys/right_wrist
           datastoreKey: HRC::ViveRos::RightHandJoyMsg
-          datastoreKey: HRD::ViveRos::manus_glove_1
+          #datastoreKey: HRD::ViveRos::manus_glove_1
 
   HRC::Main_:
     base: Parallel
@@ -233,6 +234,7 @@ CentroidalManager:
   horizonDt: 0.005 # [sec]
   reinitForRefComZ: true
 
+# RetargetingManagerSet configuration for the waist, elbows, and wrists
 RetargetingManagerSet:
   name: RetargetingManagerSet
   humanWaistPoseTopicName: /hrc/poses/waist
@@ -242,7 +244,8 @@ RetargetingManagerSet:
   humanWaistPoseFromOrigin:
     translation: [1, 0.0, 0.8]
     # orientation: [0.0, 0.0, 1.57]
-  pointMarkerSize: 0.15
+  #pointMarkerSize: 0.15
+  pointMarkerSize: 0.05
   phaseMarkerPoseOffset:
     translation: [0.0, 0.0, 1.0]
   ArmRetargetingManagerList:
@@ -557,6 +560,7 @@ robots:
               rotation: [1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]
             elbowScale: 0.8
             wristScale: 0.8
+            #wristScale: 4.0
         Right:
           robotCalibPostures:
             X:

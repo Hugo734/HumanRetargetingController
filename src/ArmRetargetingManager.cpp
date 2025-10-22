@@ -138,7 +138,8 @@ void ArmRetargetingManager::updatePre()
       auto scalePose = [&](const sva::PTransformd & pose, double scale) -> sva::PTransformd {
         return sva::PTransformd(pose.rotation(), scale * pose.translation());
       };
-
+      
+      // Check this line
       const auto & humanWaistPoseFromOrigin = ctl().retargetingManagerSet_->config_.humanWaistPoseFromOrigin;
       humanShoulderPose_ = calibResult_.humanTransFromBaseToShoulder * humanWaistPoseFromOrigin;
 
