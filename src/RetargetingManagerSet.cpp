@@ -305,53 +305,49 @@ void RetargetingManagerSet::updateReadiness()
   }
 }
 
-/*
+
 void RetargetingManagerSet::updateEnablement()
 {
   bool enableFlag = false;
   bool disableFlag = false;
 
   // Check the VR contollers Buttons
-  if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
-  {
-    const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
+  // if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
+  // {
+  //   const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
 
-    if(leftHandJoyMsg.buttons.size() > 0 && leftHandJoyMsg.buttons[0])
-    {
-      disableFlag = true;
-    }
-  }
-  if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
-  {
-    const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
+  //   if(leftHandJoyMsg.buttons.size() > 0 && leftHandJoyMsg.buttons[0])
+  //   {
+  //     disableFlag = true;
+  //   }
+  // }
+  // if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
+  // {
+  //   const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
 
-    if(rightHandJoyMsg.buttons.size() > 0 && rightHandJoyMsg.buttons[0])
-    {
-      printf("enableFlag\n");
-      enableFlag = true;
-    }
-  }
+  //   if(rightHandJoyMsg.buttons.size() > 0 && rightHandJoyMsg.buttons[0])
+  //   {
+  //     printf("enableFlag\n");
+  //     enableFlag = true;
+  //   }
+  // }
 
-  if(disableFlag && isEnabled_)
-  {
-    disable();
-  }
-  else if(enableFlag && !isEnabled_)
-  {
-    enable();
-  }
+  // if(disableFlag && isEnabled_)
+  // {
+  //   disable();
+  // }
+  // else if(enableFlag && !isEnabled_)
+  // {
+  //   enable();
+  // }
 }
-*/
+
 void RetargetingManagerSet::updateGripper()
 {
-  std::string gripperName = "l_gripper";
-  if(config_.mirrorRetargeting)
-  {
-    gripperName = "r_gripper";
-  }
+
+  
   // TODO: map the ManusDevice data to gripper opening
   // example : manus_glove_left_->data();
-
   // if(manus_glove_left_->data.axes.size() > 2)
   // {
   //   ctl().robot().gripper(gripperName).setTargetOpening(1.0 - leftHandJoyMsg.axes[2]);
