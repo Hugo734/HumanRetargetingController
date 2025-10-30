@@ -158,9 +158,6 @@ public:
   //! Whether retargeting is enabled or not
   bool isEnabled_ = false;
 
-  //! Whether retargeting is enable or not with keyboard activation (For just trackers integration)
-  //bool keyboardToggle_ = false; #quick test
-
   //! Robot for calibration
   std::shared_ptr<mc_rbdyn::Robots> calibRobots_;
 
@@ -177,8 +174,8 @@ protected:
   //! ROS pose manager for human waist pose
   std::shared_ptr<RosPoseManager> humanWaistPoseManager_;
 
-  mc_rbdyn::ManusDevice *manus_glove_left_;
-  mc_rbdyn::ManusDevice *manus_glove_right_;
+  mc_rbdyn::ManusDevice *manus_glove_left_ = nullptr;
+  mc_rbdyn::ManusDevice *manus_glove_right_ = nullptr;
 
 
   //! ROS execuctor

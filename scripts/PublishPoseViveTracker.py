@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import sys
 import json
 import numpy as np
@@ -10,7 +9,6 @@ from sensor_msgs.msg import Joy
 from tf_transformations import euler_matrix, translation_matrix, translation_from_matrix, quaternion_from_matrix
 import openvr
 import time
-#from PublishManager import PublishManager  # Make sure this is ROS 2 compatible!
 from PublishManager import PublishManager
 
 
@@ -23,27 +21,20 @@ class PublishPoseViveTracker(Node):
         self.offset_mat_map = {
             "waist": euler_matrix(-0.5 * np.pi, 0.0, 0.5 * np.pi, "rxyz"),
             "left_elbow": translation_matrix([0.0, 0.0, 0.04]),
-            "left_wrist": translation_matrix([0.0, 0.0, 0.05]),
-            # Rotation 
-            # "right_elbow": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.04]),
-            # "right_wrist": euler_matrix(0.0, np.pi, 0.0, "rxyz") @ translation_matrix([0.0, 0.0, 0.05]),
             "right_elbow": translation_matrix([0.0, 0.0, 0.04]),
+            # TODO Look for the right way to manipulate the L_WRIST_Y and R_WRIST_Y
+            "left_wrist": translation_matrix([0.0, 0.0, 0.05]),
             "right_wrist": translation_matrix([0.0, 0.0, 0.05]),
         }
 
         self.device_sn_to_body_part_map = {
-            # ----------------------------
-            # # This was the ID of the controller, but know I will work with tracker instead in the opper of the hands
-            # "LHR-69DC3340": "right_wrist", #Change if nee it LHR-96603665
-            # "LHR-96603665": "left_wrist", 
-            # ----------------------------
-            # Know here will be the new ID for the new trackers
+            # ------------ Id of the Trackers of the Wrist ----------
             "LHR-1303A34B": "right_wrist",
             "LHR-66EDBD85": "left_wrist",
-            # ----------------------------
+            # -------------Id of the Trackers of the Waist ----------
             "LHR-8FDCD86A": "waist",
-            # ----------------------------
-            "LHR-A26B44E2": "left_elbow", #LHR-C0CF8E77
+            # -------------Id of the Trackers of the Elbows ---------
+            "LHR-A26B44E2": "left_elbow", 
             "LHR-C0CF8E77": "right_elbow",
         }
 
@@ -83,6 +74,7 @@ class PublishPoseViveTracker(Node):
 
             time.sleep(rate)
 
+    #TODO Check the logic of this function 
     def process_single_device_data(self, device_idx, print_info=False):
         
         if not self.device_data_list[device_idx].bDeviceIsConnected:

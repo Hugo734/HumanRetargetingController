@@ -215,10 +215,10 @@ CentroidalManager:
   enableZmpFeedback: true
   enableComZFeedback: true
   dcmGainP: 2.0 # It must be greater than 1 to be stable
-  zmpVelGain: 0.02
+  zmpVelGain: 0.002
   comZGainP: 2000.0
   comZGainD: 500.0
-  refComZ: 0.915 # [m]
+  refComZ: 0.900 # [m]
   useTargetPoseForControlRobotAnchorFrame: true
   useActualComForWrenchDist: false
   wrenchDistConfig:
@@ -243,7 +243,7 @@ RetargetingManagerSet:
   enableGripper: true
   humanWaistPoseFromOrigin:
     translation: [1, 0.0, 0.8]
-    # orientation: [0.0, 0.0, 1.57]
+    orientation: [0.0, 0.0, 1.57]
   #pointMarkerSize: 0.15
   pointMarkerSize: 0.05
   phaseMarkerPoseOffset:
@@ -477,9 +477,7 @@ robots:
         L_SHOULDER_R: [0.4363323129985824] # 25
         L_ELBOW_P: [-1.5707963267948966] # -90
       jointWeights:
-        WAIST_R: 100
-        WAIST_P: 100
-        WAIST_Y: 100
+        CHEST_P: 50
 
     CoMTask:
       activeJoints: [
@@ -494,28 +492,28 @@ robots:
       LeftElbow:
         activeJoints: [
         "Root",
-        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "CHEST_Y",
         "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y"]
       LeftWrist:
         activeJoints: [
         "Root",
-        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "CHEST_Y",
         "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y", "L_ELBOW_P"]
       RightElbow:
         activeJoints: [
         "Root",
-        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "CHEST_Y",
         "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y"]
       RightWrist:
         activeJoints: [
         "Root",
-        "CHEST_Y", # "WAIST_P", "WAIST_R",
+        "CHEST_Y",
         "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P"]
 
     RetargetingManagerSet:
       robotBaseLinkName: CHEST_P_LINK
       syncJoints: [
-      "CHEST_Y", # "WAIST_P", "WAIST_R",
+      "CHEST_Y",
       "L_SHOULDER_P", "L_SHOULDER_R", "L_SHOULDER_Y", "L_ELBOW_P",
       "R_SHOULDER_P", "R_SHOULDER_R", "R_SHOULDER_Y", "R_ELBOW_P"]
       ArmRetargetingManagerList:

@@ -1,3 +1,4 @@
+#include <mc_manus/ManusDevice.h>
 #include <mc_rtc/gui/Arrow.h>
 #include <mc_rtc/gui/Button.h>
 #include <mc_rtc/gui/Cylinder.h>
@@ -5,6 +6,7 @@
 #include <mc_rtc/gui/Label.h>
 #include <mc_rtc/gui/Point3D.h>
 #include <mc_rtc/gui/Transform.h>
+#include <mc_rtc/logging.h>
 #include <mc_rtc_ros/ros.h>
 
 #include <HumanRetargetingController/ArmRetargetingManager.h>
@@ -15,6 +17,10 @@
 #include <sensor_msgs/msg/joy.hpp>
 
 #include <iostream>
+#include <optional>
+#include <unordered_map>
+#include <unordered_set>
+#include <algorithm>
 
 using namespace HRC;
 
@@ -118,6 +124,7 @@ void RetargetingManagerSet::update()
   {
     updateGripper();
   }
+
 
   updateGUI();
 
@@ -311,60 +318,97 @@ void RetargetingManagerSet::updateEnablement()
   bool enableFlag = false;
   bool disableFlag = false;
 
-  // Check the VR contollers Buttons
-  // if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
-  // {
-  //   const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
+  //Check the VR contollers Buttons
+  if(ctl().datastore().has("HRC::ViveRos::LeftHandJoyMsg"))
+  {
+    const sensor_msgs::msg::Joy & leftHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::LeftHandJoyMsg");
 
-  //   if(leftHandJoyMsg.buttons.size() > 0 && leftHandJoyMsg.buttons[0])
-  //   {
-  //     disableFlag = true;
-  //   }
-  // }
-  // if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
-  // {
-  //   const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
+    if(leftHandJoyMsg.buttons.size() > 0 && leftHandJoyMsg.buttons[0])
+    {
+      disableFlag = true;
+    }
+  }
+  if(ctl().datastore().has("HRC::ViveRos::RightHandJoyMsg"))
+  {
+    const sensor_msgs::msg::Joy & rightHandJoyMsg = ctl().datastore().get<sensor_msgs::msg::Joy>("HRC::ViveRos::RightHandJoyMsg");
 
-  //   if(rightHandJoyMsg.buttons.size() > 0 && rightHandJoyMsg.buttons[0])
-  //   {
-  //     printf("enableFlag\n");
-  //     enableFlag = true;
-  //   }
-  // }
+    if(rightHandJoyMsg.buttons.size() > 0 && rightHandJoyMsg.buttons[0])
+    {
+      printf("enableFlag\n");
+      enableFlag = true;
+    }
+  }
 
-  // if(disableFlag && isEnabled_)
-  // {
-  //   disable();
-  // }
-  // else if(enableFlag && !isEnabled_)
-  // {
-  //   enable();
-  // }
+  if(disableFlag && isEnabled_)
+  {
+    disable();
+  }
+  else if(enableFlag && !isEnabled_)
+  {
+    enable();
+  }
 }
 
 void RetargetingManagerSet::updateGripper()
 {
+  auto computeThumbOpening = [](const mc_rbdyn::ManusDevice * glove) -> std::optional<double> {
+    if(glove == nullptr)
+    {
+      return std::nullopt;
+    }
 
-  
-  // TODO: map the ManusDevice data to gripper opening
-  // example : manus_glove_left_->data();
-  // if(manus_glove_left_->data.axes.size() > 2)
-  // {
-  //   ctl().robot().gripper(gripperName).setTargetOpening(1.0 - leftHandJoyMsg.axes[2]);
-  // }
+    const auto fingerData = glove->getFingers();
+    if(fingerData.empty())
+    {
+      return std::nullopt;
+    }
 
-  
-  // std::string gripperName = "r_gripper";
-  // if(config_.mirrorRetargeting)
-  // {
-  //   gripperName = "l_gripper";
-  // }
-  // if(rightHandJoyMsg.axes.size() > 2)
-  // {
-  //   ctl().robot().gripper(gripperName).setTargetOpening(1.0 - rightHandJoyMsg.axes[2]);
-  // }
-  
+    double thumbSum = 0.0;
+    size_t thumbCount = 0;
+    for(const auto & [fingerName, ergonomics] : fingerData)
+    {
+      const bool fingerMatches = fingerName.find("Thumb") != std::string::npos;
+      for(const auto & ergo : ergonomics)
+      {
+        const bool ergoMatches = ergo.type.find("Thumb") != std::string::npos;
+        if(!fingerMatches && !ergoMatches)
+        {
+          continue;
+        }
+        thumbSum += ergo.value;
+        thumbCount++;
+      }
+    }
+
+    if(thumbCount == 0)
+    {
+      return std::nullopt;
+    }
+
+    const double averageThumb = thumbSum / static_cast<double>(thumbCount);
+    const double clampedThumb = std::clamp(averageThumb, 0.0, 1.0);
+    return 1.0 - clampedThumb;
+  };
+
+  auto applyOpening = [this, &computeThumbOpening](const std::string & gripperName, mc_rbdyn::ManusDevice * glove) {
+    if(glove == nullptr || !ctl().robot().hasGripper(gripperName))
+    {
+      return;
+    }
+
+    const auto opening = computeThumbOpening(glove);
+    if(!opening.has_value())
+    {
+      return;
+    }
+
+    ctl().robot().gripper(gripperName).setTargetOpening(opening.value());
+  };
+
+  applyOpening("l_gripper", manus_glove_left_);
+  applyOpening("r_gripper", manus_glove_right_);
 }
+
 
 void RetargetingManagerSet::updateGUI()
 {
