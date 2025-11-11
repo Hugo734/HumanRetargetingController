@@ -142,6 +142,7 @@ void RetargetingManagerSet::stop()
   }
 }
 
+//TODO: Example of how to use the map 
 void RetargetingManagerSet::addToGUI(mc_rtc::gui::StateBuilder & gui)
 {
   ctl().gui()->addElement({ctl().name()}, mc_rtc::gui::Button("ResetPosture", [this]() {
@@ -163,8 +164,7 @@ void RetargetingManagerSet::addToGUI(mc_rtc::gui::StateBuilder & gui)
                  mc_rtc::gui::Label("isReady", [this]() { return isReady_ ? "Yes" : "No"; }),
                  // This implementation is for the Enalbe the retargeting without 
                  mc_rtc::gui::Label("isEnabled", [this](){ return isEnabled_ ? "Yes" : "No"; }));
-                 //mc_rtc::gui::Button("clearRobot", [this]() { keyboardToggle_ = !keyboardToggle_;}));
-
+                 
   if(!config_.mirrorRetargeting)
   {
     gui.addElement({ctl().name(), config_.name, "Calib"},
@@ -312,7 +312,7 @@ void RetargetingManagerSet::updateReadiness()
   }
 }
 
-
+//Function to enable the retargeting only with the Valve index controllers
 void RetargetingManagerSet::updateEnablement()
 {
   bool enableFlag = false;
@@ -496,7 +496,7 @@ void RetargetingManagerSet::updateGUI()
       }
     }
   }
-
+//TODO: CHECK THIS FOR THE ROTATION
   // Add phase marker
   {
     auto getPose = [this]() -> sva::PTransformd {

@@ -6,10 +6,21 @@ import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from sensor_msgs.msg import Joy
-from tf_transformations import euler_matrix, translation_matrix, translation_from_matrix, quaternion_from_matrix
+from tf_transformations import (
+    euler_matrix,
+    translation_matrix,
+    translation_from_matrix,
+    quaternion_from_matrix,
+    quaternion_from_euler,
+    quaternion_matrix,
+)
 import openvr
-import time
 from PublishManager import PublishManager
+
+
+def quaternion_offset(roll, pitch, yaw, axes="rxyz"):
+    quat = quaternion_from_euler(roll, pitch, yaw, axes=axes)
+    return quaternion_matrix(quat)
 
 
 class PublishPoseViveTracker(Node):
@@ -19,13 +30,14 @@ class PublishPoseViveTracker(Node):
 
         self.root_mat = euler_matrix(0.5 * np.pi, 0.0, 0.0)
         self.offset_mat_map = {
-            "waist": euler_matrix(-0.5 * np.pi, 0.0, 0.5 * np.pi, "rxyz"),
+            "waist": quaternion_offset(-0.5 * np.pi, 0.0, 0.5 * np.pi),
             "left_elbow": translation_matrix([0.0, 0.0, 0.04]),
             "right_elbow": translation_matrix([0.0, 0.0, 0.04]),
             # TODO Look for the right way to manipulate the L_WRIST_Y and R_WRIST_Y
             "left_wrist": translation_matrix([0.0, 0.0, 0.05]),
-            "right_wrist": translation_matrix([0.0, 0.0, 0.05]),
+            "right_wrist": quaternion_offset(np.pi, 0.0, 0.0),
         }
+            
 
         self.device_sn_to_body_part_map = {
             # ------------ Id of the Trackers of the Wrist ----------
@@ -47,32 +59,33 @@ class PublishPoseViveTracker(Node):
 
         self.pose_pub_managers = {}
         self.joy_pub_managers = {}
+        self._printed_device_info = False
+        self.timer = self.create_timer(1.0 / 30.0, self._poll_devices)
 
         for body_part in self.device_sn_to_body_part_map.values():
             self.pose_pub_managers[body_part] = PublishManager(self, body_part)
 
-    def __del__(self):
-        openvr.shutdown()
+    def destroy_node(self):
+        try:
+            openvr.shutdown()
+        finally:
+            super().destroy_node()
 
-    def run(self):
-        rate = 1.0 / 30 # 30 Hz
-        print_info = True
+    def _poll_devices(self):
+        self.current_stamp = self.get_clock().now().to_msg()
+        self.device_data_list = self.vr_system.getDeviceToAbsoluteTrackingPose(
+            openvr.TrackingUniverseStanding, 0, openvr.k_unMaxTrackedDeviceCount
+        )
 
-        while rclpy.ok():
-            self.current_stamp = self.get_clock().now().to_msg()
-            self.device_data_list = self.vr_system.getDeviceToAbsoluteTrackingPose(
-                openvr.TrackingUniverseStanding, 0, openvr.k_unMaxTrackedDeviceCount
-            )
+        print_info = not self._printed_device_info
+        if print_info:
+            self.get_logger().info("Device info:")
 
-            if print_info:
-                self.get_logger().info("Device info:")
-            for device_idx in range(openvr.k_unMaxTrackedDeviceCount):
-                self.process_single_device_data(device_idx, print_info)
-                
-            if print_info:
-                print_info = False
+        for device_idx in range(openvr.k_unMaxTrackedDeviceCount):
+            self.process_single_device_data(device_idx, print_info)
 
-            time.sleep(rate)
+        if print_info:
+            self._printed_device_info = True
 
     #TODO Check the logic of this function 
     def process_single_device_data(self, device_idx, print_info=False):
@@ -95,61 +108,67 @@ class PublishPoseViveTracker(Node):
             device_type_str = type_map.get(device_type, "Unknown")
             self.get_logger().info(f"  - {device_type_str}: {device_sn}")
 
-        if device_sn not in self.device_sn_to_body_part_map or not is_pose_valid:
+        body_part = self.device_sn_to_body_part_map.get(device_sn)
+
+        if body_part and is_pose_valid:
+            pose_mat = np.zeros((4, 4))
+            pose_mat[0:3, 0:4] = pose_matrix_data.m
+            pose_mat[3, 3] = 1.0
+            pose_mat = self.root_mat @ pose_mat
+            if body_part in self.offset_mat_map:
+                pose_mat = pose_mat @ self.offset_mat_map[body_part]
+
+            pose_msg = PoseStamped()
+            pose_msg.header.stamp = self.current_stamp
+            pose_msg.header.frame_id = "robot_map"
+            pos = translation_from_matrix(pose_mat)
+            quat = quaternion_from_matrix(pose_mat)
+
+            pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z = pos
+            pose_msg.pose.orientation.x, pose_msg.pose.orientation.y, pose_msg.pose.orientation.z, pose_msg.pose.orientation.w = quat
+
+            self.pose_pub_managers[body_part].setMsg(pose_msg)
+            self.pose_pub_managers[body_part].publishMsg()
+
+            self.get_logger().info(
+                f"Published {body_part}: pos=({pose_msg.pose.position.x:.3f}, {pose_msg.pose.position.y:.3f}, {pose_msg.pose.position.z:.3f})"
+            )
+
+        # Handle joy publishing for controllers regardless of mapping
+        if device_type == openvr.TrackedDeviceClass_Controller:
+            controller_name = body_part if body_part else f"controller_{device_sn}"
+            self.publish_controller(device_idx, controller_name)
+
+    def publish_controller(self, device_idx, controller_name):
+        success, device_state = self.vr_system.getControllerState(device_idx)
+        if not success:
+            self.get_logger().warn(f"Skipping controller {controller_name}: state unavailable")
             return
 
-        body_part = self.device_sn_to_body_part_map[device_sn]
+        if controller_name not in self.joy_pub_managers:
+            self.joy_pub_managers[controller_name] = PublishManager(
+                self, controller_name, msg_type=Joy, topic_prefix="hrc/joys"
+            )
 
-        pose_mat = np.zeros((4, 4))
-        pose_mat[0:3, 0:4] = pose_matrix_data.m
-        pose_mat[3, 3] = 1.0
-        pose_mat = self.root_mat @ pose_mat
-        if body_part in self.offset_mat_map:
-            pose_mat = pose_mat @ self.offset_mat_map[body_part]
+        joy_msg = Joy()
+        joy_msg.header.stamp = self.current_stamp
+        joy_msg.header.frame_id = "robot_map"
+        joy_msg.axes = [device_state.rAxis[0].x, device_state.rAxis[0].y, device_state.rAxis[1].x]
+        joy_msg.buttons = [
+            bool((device_state.ulButtonPressed >> openvr.k_EButton_ApplicationMenu) & 1),
+            bool((device_state.ulButtonPressed >> openvr.k_EButton_Grip) & 1),
+            bool((device_state.ulButtonPressed >> openvr.k_EButton_SteamVR_Touchpad) & 1),
+            bool((device_state.ulButtonTouched >> openvr.k_EButton_SteamVR_Touchpad) & 1),
+        ]
 
-        pose_msg = PoseStamped()
-        pose_msg.header.stamp = self.current_stamp
-        pose_msg.header.frame_id = "robot_map"
-        pos = translation_from_matrix(pose_mat)
-        quat = quaternion_from_matrix(pose_mat)
-
-        pose_msg.pose.position.x, pose_msg.pose.position.y, pose_msg.pose.position.z = pos
-        pose_msg.pose.orientation.x, pose_msg.pose.orientation.y, pose_msg.pose.orientation.z, pose_msg.pose.orientation.w = quat
-
-        self.pose_pub_managers[body_part].setMsg(pose_msg)
-        self.pose_pub_managers[body_part].publishMsg()
-
-        self.get_logger().info(
-            f"Published {body_part}: pos=({pose_msg.pose.position.x:.3f}, {pose_msg.pose.position.y:.3f}, {pose_msg.pose.position.z:.3f})"
-        )
-
-        # Handle joy publishing for controllers only (not trackers)
-        if device_type == openvr.TrackedDeviceClass_Controller:
-            if body_part not in self.joy_pub_managers:
-                self.joy_pub_managers[body_part] = PublishManager(self, body_part, msg_type=Joy, topic_prefix="hrc/joys")
-
-            device_state = self.vr_system.getControllerState(device_idx)[1]
-            joy_msg = Joy()
-            joy_msg.header = pose_msg.header
-            joy_msg.axes = [device_state.rAxis[0].x, device_state.rAxis[0].y, device_state.rAxis[1].x]
-            joy_msg.buttons = [
-                bool(device_state.ulButtonPressed >> openvr.k_EButton_ApplicationMenu & 1),
-                bool(device_state.ulButtonPressed >> openvr.k_EButton_Grip & 1),
-                bool(device_state.ulButtonPressed >> openvr.k_EButton_SteamVR_Touchpad & 1),
-                bool(device_state.ulButtonTouched >> openvr.k_EButton_SteamVR_Touchpad & 1),
-            ]
-
-            self.joy_pub_managers[body_part].setMsg(joy_msg)
-            self.joy_pub_managers[body_part].publishMsg()
-
-        # For trackers (like wrist trackers), we only publish pose data
-        # Joy data will need to come from other controllers if needed
+        self.joy_pub_managers[controller_name].setMsg(joy_msg)
+        self.joy_pub_managers[controller_name].publishMsg()
 
 def main(args=None):
     rclpy.init(args=args)
     node = PublishPoseViveTracker()
     try:
-        node.run()
+        rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:

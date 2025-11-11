@@ -308,6 +308,7 @@ void ArmRetargetingManager::setTaskTarget(const std::shared_ptr<mc_tasks::Transf
   }
 }
 
+//TODO: Set the Human Calibration
 void ArmRetargetingManager::setHumanCalibSource(const std::string & axis)
 {
   if(!(humanWaistPoseManager()->isValid() && humanElbowPoseManager_->isValid() && humanWristPoseManager_->isValid()))

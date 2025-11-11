@@ -30,6 +30,7 @@ class ArmRetargetingManager
 
 public:
   /** \brief Configuration. */
+  //TODO: Check this
   struct Configuration
   {
     //! Arm side
