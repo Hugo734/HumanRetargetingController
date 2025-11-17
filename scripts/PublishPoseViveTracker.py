@@ -48,6 +48,12 @@ class PublishPoseViveTracker(Node):
             # -------------Id of the Trackers of the Elbows ---------
             "LHR-A26B44E2": "left_elbow", 
             "LHR-C0CF8E77": "right_elbow",
+
+            # --------------- This section to use the controller with the Valve Index Controllers -----------------
+            "LHR-69DC3340": "right_wrist",
+            "LHR-96603665": "left_wrist",
+
+
         }
 
         if len(sys.argv) >= 2:
