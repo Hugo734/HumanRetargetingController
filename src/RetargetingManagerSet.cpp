@@ -21,6 +21,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <algorithm>
+#include <vector>
+#include <string>
 
 using namespace HRC;
 
@@ -349,65 +351,99 @@ void RetargetingManagerSet::updateEnablement()
   }
 }
 
+std::vector<double> RetargetingManagerSet::ergonomicsMapToVector_(
+    const std::unordered_map<std::string,
+                             std::vector<mc_rbdyn::ManusDevice::Ergonomics>> & fingers,
+    const std::vector<std::string> & ergo_type_order) const
+{
+  std::vector<double> result;
+  result.reserve(ergo_type_order.size());
+
+  for(const auto & type_name : ergo_type_order)
+  {
+    bool found = false;
+    for(const auto & [fingerName, ergonomics] : fingers)
+    {
+      for(const auto & e : ergonomics)
+      {
+        if(e.type == type_name)
+        {
+          result.push_back(e.value);
+          found = true;
+          break;
+        }
+      }
+      if(found) { break; }
+    }
+
+    if(!found)
+    {
+      // Could also log here
+      // mc_rtc::log::warning("[RetargetingManagerSet] Ergonomics type {} not found, using 0.0", type_name);
+      result.push_back(0.0);
+    }
+  }
+
+  return result;
+}
+
+
+
 void RetargetingManagerSet::updateGripper()
 {
-  auto computeThumbOpening = [](const mc_rbdyn::ManusDevice * glove) -> std::optional<double> {
-    if(glove == nullptr)
+  auto processGlove = [this](const std::string & gripperName,
+                            mc_rbdyn::ManusDevice * glove)
+  {
+    if(!glove) { return; }
+    if(!ctl().robot().hasGripper(gripperName)) { return; }
+
+    // 1) Read Manus ergonomics
+    const auto fingers = glove->getFingers();
+
+    // 2) Ordered list of ergonomics → Leap joints (NO PINKY)
+    static const std::vector<std::string> LEAP_JOINT_ORDER_NO_PINKY = {
+      "ThumbMCPStretch",
+      "ThumbPIPStretch",
+      "ThumbDIPStretch",
+      "ThumbMCPStretch",
+
+      "IndexMCPStretch",
+      "IndexPIPStretch",
+      "IndexDIPStretch",
+
+      "MiddleMCPStretch",
+      "MiddlePIPStretch",
+      "MiddleDIPStretch",
+
+      "RingMCPStretch",
+      "RingPIPStretch",
+      "RingDIPStretch",
+
+      "PinkyMCPStretch",
+      "PinkyPIPStretch",
+      "PinkyDIPStretch"
+
+    };
+
+    // 3) Convert Manus ergonomics → Leap joint vector
+    std::vector<double> q =
+        ergonomicsMapToVector_(fingers, LEAP_JOINT_ORDER_NO_PINKY);
+
+    // 4) Clamp & scale (Manus is in degrees, Leap expects radians)
+    for(double & v : q)
     {
-      return std::nullopt;
+      v = mc_rtc::constants::toRad(v);   // deg → rad
+      v = std::clamp(v, -1.5, 1.5);      // safety clamp
     }
 
-    const auto fingerData = glove->getFingers();
-    if(fingerData.empty())
-    {
-      return std::nullopt;
-    }
-
-    double thumbSum = 0.0;
-    size_t thumbCount = 0;
-    for(const auto & [fingerName, ergonomics] : fingerData)
-    {
-      const bool fingerMatches = fingerName.find("Thumb") != std::string::npos;
-      for(const auto & ergo : ergonomics)
-      {
-        const bool ergoMatches = ergo.type.find("Thumb") != std::string::npos;
-        if(!fingerMatches && !ergoMatches)
-        {
-          continue;
-        }
-        thumbSum += ergo.value;
-        thumbCount++;
-      }
-    }
-
-    if(thumbCount == 0)
-    {
-      return std::nullopt;
-    }
-
-    const double averageThumb = thumbSum / static_cast<double>(thumbCount);
-    const double clampedThumb = std::clamp(averageThumb, 0.0, 1.0);
-    return 1.0 - clampedThumb;
+    // 5) Send directly to Leap hand through the robot gripper
+    ctl().robot().gripper(gripperName).setTargetQ(q);
   };
 
-  auto applyOpening = [this, &computeThumbOpening](const std::string & gripperName, mc_rbdyn::ManusDevice * glove) {
-    if(glove == nullptr || !ctl().robot().hasGripper(gripperName))
-    {
-      return;
-    }
-
-    const auto opening = computeThumbOpening(glove);
-    if(!opening.has_value())
-    {
-      return;
-    }
-
-    ctl().robot().gripper(gripperName).setTargetOpening(opening.value());
-  };
-
-  applyOpening("l_gripper", manus_glove_left_);
-  applyOpening("r_gripper", manus_glove_right_);
+  processGlove("l_gripper", manus_glove_left_);
+  processGlove("r_gripper", manus_glove_right_);
 }
+
 
 
 void RetargetingManagerSet::updateGUI()

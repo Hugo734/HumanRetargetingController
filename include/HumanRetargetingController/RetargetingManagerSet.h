@@ -9,7 +9,9 @@
 #include <HumanRetargetingController/ArmSide.h>
 
 #include <mc_manus/ManusDevice.h>
-
+#include <vector>
+#include <unordered_map>
+#include <string>
 
 namespace HRC
 {
@@ -135,6 +137,16 @@ protected:
 
   /** \brief Update gripper. */
   void updateGripper();
+
+  /** \brief Convert ergonomics map to vector.
+      \param joints ergonomics map
+      \param joint_name_order order of joint names
+      \return ergonomics values in vector
+  */
+  std::vector<double> ergonomicsMapToVector_(
+  const std::unordered_map<std::string,
+                            std::vector<mc_rbdyn::ManusDevice::Ergonomics>> & joints,
+  const std::vector<std::string> & joint_name_order) const;
 
   /** \brief Update GUI. */
   void updateGUI();
