@@ -351,6 +351,8 @@ void RetargetingManagerSet::updateEnablement()
   }
 }
 
+
+
 std::vector<double> RetargetingManagerSet::ergonomicsMapToVector_(
     const std::unordered_map<std::string,
                              std::vector<mc_rbdyn::ManusDevice::Ergonomics>> & fingers,
@@ -391,6 +393,8 @@ std::vector<double> RetargetingManagerSet::ergonomicsMapToVector_(
 
 void RetargetingManagerSet::updateGripper()
 {
+
+
   auto processGlove = [this](const std::string & gripperName,
                             mc_rbdyn::ManusDevice * glove)
   {
@@ -401,33 +405,35 @@ void RetargetingManagerSet::updateGripper()
     const auto fingers = glove->getFingers();
 
     // 2) Ordered list of ergonomics → Leap joints (NO PINKY)
-    static const std::vector<std::string> LEAP_JOINT_ORDER_NO_PINKY = {
-      "ThumbMCPStretch",
-      "ThumbPIPStretch",
-      "ThumbDIPStretch",
-      "ThumbMCPStretch",
+  static const std::vector<std::string> LEAP_TO_LGRIPPER_ORDER = {
+    // Index finger (L_MCP_1 ... L_FINGERTIP_1)
+    "IndexMCPStretch",   // MCP
+    "IndexPIPStretch",   // PIP
+    "IndexDIPStretch",   // DIP
+    "IndexDIPStretch",   // TIP  (reuse DIP)
 
-      "IndexMCPStretch",
-      "IndexPIPStretch",
-      "IndexDIPStretch",
+    // Middle finger (L_MCP_2 ... L_FINGERTIP_2)
+    "MiddleMCPStretch",  // MCP
+    "MiddlePIPStretch",  // PIP
+    "MiddleDIPStretch",  // DIP
+    "MiddleDIPStretch",  // TIP  (reuse DIP)
 
-      "MiddleMCPStretch",
-      "MiddlePIPStretch",
-      "MiddleDIPStretch",
+    // Ring finger (L_MCP_3 ... L_FINGERTIP_3)
+    "RingMCPStretch",    // MCP
+    "RingPIPStretch",    // PIP
+    "RingDIPStretch",    // DIP
+    "RingDIPStretch",    // TIP  (reuse DIP)
 
-      "RingMCPStretch",
-      "RingPIPStretch",
-      "RingDIPStretch",
-
-      "PinkyMCPStretch",
-      "PinkyPIPStretch",
-      "PinkyDIPStretch"
-
-    };
+    // Thumb (L_THUMB_CMC, L_THUMB_PIP, L_THUMB_DIP, L_THUMB_FINGERTIP)
+    "ThumbMCPStretch",   // use as CMC flexion
+    "ThumbPIPStretch",   // PIP
+    "ThumbDIPStretch",   // DIP
+    "ThumbDIPStretch"    // TIP  (reuse DIP)
+  };
 
     // 3) Convert Manus ergonomics → Leap joint vector
     std::vector<double> q =
-        ergonomicsMapToVector_(fingers, LEAP_JOINT_ORDER_NO_PINKY);
+        ergonomicsMapToVector_(fingers, LEAP_TO_LGRIPPER_ORDER);
 
     // 4) Clamp & scale (Manus is in degrees, Leap expects radians)
     for(double & v : q)
