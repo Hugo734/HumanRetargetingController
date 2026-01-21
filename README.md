@@ -8,3 +8,16 @@ Controller for retargeting the motion from human to humanoid robot
 [![LICENSE](https://img.shields.io/github/license/isri-aist/HumanRetargetingController)](https://github.com/isri-aist/HumanRetargetingController/blob/master/LICENSE)
 
 https://github.com/user-attachments/assets/827753ae-862e-464d-ab4b-4ea936c238c0
+
+## Dependencies 
+* [mc_rtc] (https://github.com/mc-rtc/mc-rtc-superbuild/)
+* ROS2
+
+
+
+## Install the repositoy
+```bash
+sudo clone https://github.com/Hugo734/HumanRetargetingController
+```
+
+
